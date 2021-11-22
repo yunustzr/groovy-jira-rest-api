@@ -1,0 +1,34 @@
+mport groovy.json.JsonSlurper;
+import hudson.model.*;
+
+def jiraUrl = "https://${url}/rest/api/2/project/${project}/versions/";
+def conn = jiraUrl.toURL().openConnection();
+def authString = "${user}:${password}".getBytes().encodeBase64().toString()
+conn.setRequestProperty("Authorization", "Basic ${authString}");
+
+if( conn.responseCode == 200 ) {
+  def versions = new JsonSlurper().parseText(conn.content.text);
+  def currentVersion = 'undefined';
+  
+    for (version in versions)
+    {
+      if(!version.released)
+      {
+        println "using version ${version.name}";
+        currentVersion = version.name;
+        break;
+      }
+  }
+  
+  def env = System.getenv();
+  // add variable to current job
+  def pa = new ParametersAction([
+    new StringParameterValue('currentVersion', currentVersion)
+  ]);
+  Thread.currentThread().executable.addAction(pa);
+} 
+else 
+{
+  println "Something bad happened."
+  println "jiraUrl: ${jiraUrl} - ${conn.responseCode}: ${conn.responseMessage}"
+}
