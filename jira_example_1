@@ -1,0 +1,41 @@
+mport groovy.json.JsonSlurper
+
+  /*
+  def urlRoot = "https://example.com"
+  def issueId = ""
+  def userName = ""
+  def password = ""
+  def addr       = "${urlRoot}/rest/api/2/issue/${issueId}"
+  def authString = "${userName}:${password}".getBytes().encodeBase64().toString()
+  */
+   
+  def urlRoot = "https://jira.atlassian.com"
+  def issueId = "JIRA-9"
+  def userName = ""
+  def password = ""
+  def addr       = "${urlRoot}/rest/api/2/issue/${issueId}"
+  def authString = ""
+
+def conn = addr.toURL().openConnection()
+if(authString.length() > 0)
+{
+   conn.setRequestProperty( "Authorization", "Basic ${authString}" )
+ }
+if( conn.responseCode == 200 ) {
+
+    def result = parseJSON(conn.content.text)
+    println "json id:${result.id}"
+    println "json key:${result.key}"
+
+} else {
+  println "Something bad happened."
+  println "${conn.responseCode}: ${conn.responseMessage}" 
+}
+
+def parseJSON(text)
+{
+    def slurper = new JsonSlurper()
+    def result = slurper.parseText(text)
+    
+    return result
+}
