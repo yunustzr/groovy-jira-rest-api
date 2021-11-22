@@ -1,0 +1,40 @@
+import groovy.json.JsonSlurper
+
+  def urlRoot = "https://example.com"
+  def issueId = ""
+  def userName = ""
+  def password = ""
+  def addr       = "${urlRoot}/rest/api/2/issue/${issueId}/comment"  
+  def authString = "${userName}:${password}".getBytes().encodeBase64().toString()
+  
+def comment = "added by groovy"
+
+def conn = addr.toURL().openConnection()
+
+if(authString.length() > 0)
+{
+   conn.setRequestProperty( "Authorization", "Basic ${authString}" )
+}
+conn.setRequestProperty("Content-Type", "application/json");
+
+def message = """
+               {"body": "${comment}"}
+           """
+       
+conn.doOutput = true
+conn.setRequestMethod("POST");
+Writer writer = new OutputStreamWriter(conn.outputStream) 
+writer.write(message)
+writer.flush()
+writer.close()
+conn.connect()
+
+println "response code: ${conn.responseCode}"
+if( conn.responseCode != 0 ) {
+
+    println conn.content.text
+
+} else {
+  println "Something bad happened."
+  println "${conn.responseCode}: ${conn.responseMessage}" 
+}
